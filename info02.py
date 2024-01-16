@@ -1,14 +1,18 @@
-# Training (INFO02)
-# JCY oct 23
-# PRO DB PY
+"""
+Author: Blinar Fetiu
+File: info02.py (Exercise)
+Module: ProjDBPY
+Date: 02.01.2023
+"""
 
 import tkinter as tk
 import random
-from math import pow
-import time
+from math import sqrt
+import time as t
 import database
 import datetime
-from tkinter.messagebox import *
+from database import *
+from displayresults import *
 
 #important data (to save)
 pseudo="Gaston" #provisory pseudo for user
@@ -47,8 +51,21 @@ def next(event):
 
 
 def save_game(event):
-    print("dans save")
-    # TODO
+    global duration, nbtrials, nbsuccess
+    pseudo = users_pseudo()                                             # Get students name
+    pseudo = pseudo.capitalize()                                        # Write the first letter in uppercase
+    if pseudo:                                                          # If the name is inserted
+        studentId = get_studentId(pseudo)                               # Get students id
+        exerciseId = get_exerciseId(exercise)                           # Get exercises id
+        today_dayAndHour = datetime.datetime.now()                      # Get today's date and hour
+        finish_date = today_dayAndHour.strftime("%Y.%m.%d %H:%M:%S")    # Format the date and hour to yyyy.mm.dd HH:MM:SS
+        # (The duration is taken by the "display_timer" function)
+        # Insert everything in the "Scores" table
+        add_score(exerciseId[0], studentId[0], finish_date, duration, nbtrials, nbsuccess)
+        nbtrials = 0
+        nbsuccess = 0
+        window_info02.destroy()
+        messagebox.showinfo("Info", "Score saved")
 
 
 def test(event):
@@ -64,11 +81,12 @@ def test(event):
         window_info02.configure(bg="red")
     lbl_result.configure(text=f"Essais réussis : {nbsuccess} / {nbtrials}")
     window_info02.update()
-    time.sleep(1) # delai 1s
+    t.sleep(1) # delai 1s
     next(event=None)
 
 
 def display_timer():
+    global duration
     duration = datetime.datetime.now() - start_date  # elapsed time since beginning, in time with decimals
     duration_s = int(duration.total_seconds())  # idem but in seconds (integer)
     # display min:sec (00:13)
@@ -77,7 +95,7 @@ def display_timer():
 
 
 def open_window_info_02(window):
-    global window_info02, lbl_duration, lbl_result, entry_n2, label_u2, label_n1, hex_color, start_date
+    global window_info02, lbl_duration, lbl_result, entry_n2, label_u2, label_n1, hex_color, start_date, entry_pseudo
     window_info02 = tk.Toplevel(window)
 
     #window_info02 = tk.Tk()
@@ -95,12 +113,7 @@ def open_window_info_02(window):
     lbl_duration = tk.Label(window_info02, text="0:00", font=("Arial", 15))
     lbl_duration.grid(row=0,column=2, ipady=5, padx=10,pady=10)
 
-    tk.Label(window_info02, text='Pseudo:', font=("Arial", 15)).grid(row=1, column=0, padx=5, pady=5)
-    entry_pseudo = tk.Entry(window_info02, font=("Arial", 15))
-    # entry_pseudo.pack(ipadx=2, ipady=10, padx=5,pady=5)
-    entry_pseudo.grid(row=1, column=1)
-
-    lbl_result = tk.Label(window_info02, text=f"{pseudo}  Essais réussis : 0/0", font=("Arial", 15))
+    lbl_result = tk.Label(window_info02, text=f"Essais réussis : 0/0", font=("Arial", 15))
     lbl_result.grid( row=1, column=2,columnspan=3, ipady=5, padx=20,pady=20)
 
     label_n1 = tk.Label(window_info02, text="n1:",font=("Arial", 15))

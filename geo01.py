@@ -1,13 +1,18 @@
-# Training (GEO01)
-# JCY oct 23
-# PRO DB PY
+"""
+Author: Blinar Fetiu
+File: geo01.py (Exercise)
+Module: ProjDBPY
+Date: 02.01.2023
+"""
 
 import tkinter as tk
 import random
 from math import sqrt
-import time
+import time as t
 import database
-import datetime
+from datetime import datetime as dt
+from database import *
+from displayresults import *
 
 
 # Main window
@@ -49,9 +54,9 @@ def canvas_click(event):
     else:
         window_geo01.configure(bg="green")
         nbsuccess += 1
-    lbl_result.configure(text=f"{pseudo} Essais réussis : {nbsuccess} / {nbtrials}")
+    lbl_result.configure(text=f"Essais réussis : {nbsuccess} / {nbtrials}")
     window_geo01.update()
-    time.sleep(1) # delai 1s
+    t.sleep(1) # delai 1s
     next_point(event=None)
 
 
@@ -62,7 +67,7 @@ def circle(x,y,r,color):
 
 
 def next_point(event):
-    global target_x, target_y, mycircle
+    global target_x, target_y, mycircle, pseudo
     window_geo01.configure(bg=hex_color)#remettre couleur normale
     print("next_point " + str(event))
     #Clearing the canvas
@@ -87,13 +92,33 @@ def next_point(event):
     lbl_target.configure(text=f"Cliquez sur le point ({round(target_x, 1)}, {round(target_y, 1)}). Echelle x -10 à +10, y-5 à +5")
 
 
+
 def save_game(event):
-    # TODO
-    print("dans save")
+    global duration, nbtrials, nbsuccess
+    pseudo = users_pseudo()                                             # Get students name
+    pseudo = pseudo.capitalize()                                        # Write the first letter in uppercase
+    print(pseudo)
+    if pseudo:                                                          # If the name is inserted
+        studentId = get_studentId(pseudo)                               # Get students id
+        exerciseId = get_exerciseId(exercise)                           # Get exercises id
+        today_dayAndHour = dt.now()
+        finish_date = today_dayAndHour.strftime("%Y.%m.%d %H:%M:%S")
+
+        # (The duration is taken by the "display_timer" function)
+        # Insert everything in the "Scores" table
+        add_score(exerciseId[0], studentId[0], finish_date, duration, nbtrials, nbsuccess)
+        messagebox.showinfo("Info", "Score saved")
+        nbsuccess = 0
+        nbtrials = 0
+        window_geo01.destroy()
+    # Problems and solutions with this function:
+    #       Problem with the pseudo: "entry_pseudo" is not defined. Fix: "global entry_pseudo" in function "open_window_geo_01()"
+    #       Problem with the duration: "duration" is not defined. Fix: "global duration"  in function "display_timer()" and "save_game()"
 
 
 def display_timer():
-    duration=datetime.datetime.now()-start_date #elapsed time since beginning, in time with decimals
+    global duration
+    duration=dt.now()-start_date #elapsed time since beginning, in time with decimals
     duration_s=int(duration.total_seconds()) #idem but in seconds (integer)
     #display min:sec (00:13)
     lbl_duration.configure(text="{:02d}".format(int(duration_s /60)) + ":" + "{:02d}".format(duration_s %60))
@@ -102,7 +127,7 @@ def display_timer():
 
 def open_window_geo_01(window):
     # window = tk.Tk()
-    global window_geo01, hex_color, lbl_title, lbl_duration, lbl_result, lbl_target, canvas, start_date
+    global window_geo01, hex_color, lbl_title, lbl_duration, lbl_result, lbl_target, canvas, start_date, pseudo, entry_pseudo, timer_duration
     window_geo01 = tk.Toplevel(window)
 
     window_geo01.title("Exercice de géométrie")
@@ -119,10 +144,6 @@ def open_window_geo_01(window):
 
     lbl_duration = tk.Label(window_geo01, text="0:00", font=("Arial", 15))
     lbl_duration.grid(row=0,column=2, ipady=5, padx=10,pady=10)
-
-    tk.Label(window_geo01, text='Pseudo:', font=("Arial", 15)).grid(row=1, column=0, padx=5, pady=5)
-    entry_pseudo = tk.Entry(window_geo01, font=("Arial", 15))
-    entry_pseudo.grid(row=1, column=1)
 
     lbl_result = tk.Label(window_geo01, text=f"Essais réussis : 0/0", font=("Arial", 15))
     lbl_result.grid(row=1, column=3, padx=5, pady=5, columnspan=4)
@@ -141,7 +162,7 @@ def open_window_geo_01(window):
 
     # first call of next_point
     next_point(event=None)
-    start_date = datetime.datetime.now()
+    start_date = dt.now()
     display_timer()
 
     # first call of next_point
